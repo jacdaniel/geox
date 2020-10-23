@@ -1,0 +1,119 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="src">
+      <UniqueIdentifier>{cffb1b87-e741-46a2-b5c1-0fe1dc3fd886}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="src\main.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="src\OpNabla.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="src\ConjugateGradient.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="main_conjugateGratient.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="main_geotimeConstraint.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="main_nabla.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="src\BlocProc.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="src\DipProcessing.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Convolution.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Gaussian.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="src\ExtractInsert.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="src\DataToNormal.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="src\eigen.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="src\InverseLaplacian.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <CudaCompile Include="src\cuda_nabla.cu">
+      <Filter>src</Filter>
+    </CudaCompile>
+    <CudaCompile Include="src\cuda_nablat.cu">
+      <Filter>src</Filter>
+    </CudaCompile>
+    <CudaCompile Include="src\cuda_op.cu">
+      <Filter>src</Filter>
+    </CudaCompile>
+    <CudaCompile Include="src\main_constraint_geotime.cu">
+      <Filter>src</Filter>
+    </CudaCompile>
+    <CudaCompile Include="src\cuda_poisson_fourier.cu">
+      <Filter>src</Filter>
+    </CudaCompile>
+    <CudaCompile Include="src\cuda_cg.cu">
+      <Filter>src</Filter>
+    </CudaCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="src\cuda_nabla.cuh">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="src\cuda_nablat.cuh">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="src\cuda_op.cuh">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="src\cuda_poisson_fourier.cuh">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="src\cuda_cg.cuh">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="src\OpNabla.h">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="src\ConjugateGradient.h">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="src\BlocProc.h">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="src\DipProcessing.h">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Convolution.h">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Gaussian.h">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="src\ExtractInsert.h">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="src\DataToNormal.h">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="src\eigen.h">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="src\InverseLaplacian.h">
+      <Filter>src</Filter>
+    </ClInclude>
+  </ItemGroup>
+</Project>

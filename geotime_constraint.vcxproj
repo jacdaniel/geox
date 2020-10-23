@@ -1,0 +1,128 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|x64">
+      <Configuration>Debug</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|x64">
+      <Configuration>Release</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="main_conjugateGratient.cpp" />
+    <ClCompile Include="main_geotimeConstraint.cpp" />
+    <ClCompile Include="main_nabla.cpp" />
+    <ClCompile Include="src\BlocProc.cpp" />
+    <ClCompile Include="src\ConjugateGradient.cpp" />
+    <ClCompile Include="src\Convolution.cpp" />
+    <ClCompile Include="src\DataToNormal.cpp" />
+    <ClCompile Include="src\DipProcessing.cpp" />
+    <ClCompile Include="src\eigen.cpp" />
+    <ClCompile Include="src\ExtractInsert.cpp" />
+    <ClCompile Include="src\Gaussian.cpp" />
+    <ClCompile Include="src\InverseLaplacian.cpp" />
+    <ClCompile Include="src\main.cpp" />
+    <ClCompile Include="src\OpNabla.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <CudaCompile Include="src\cuda_cg.cu" />
+    <CudaCompile Include="src\cuda_nabla.cu" />
+    <CudaCompile Include="src\cuda_nablat.cu" />
+    <CudaCompile Include="src\cuda_op.cu" />
+    <CudaCompile Include="src\cuda_poisson_fourier.cu" />
+    <CudaCompile Include="src\main_constraint_geotime.cu" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="src\BlocProc.h" />
+    <ClInclude Include="src\ConjugateGradient.h" />
+    <ClInclude Include="src\Convolution.h" />
+    <ClInclude Include="src\cuda_cg.cuh" />
+    <ClInclude Include="src\cuda_nabla.cuh" />
+    <ClInclude Include="src\cuda_nablat.cuh" />
+    <ClInclude Include="src\cuda_op.cuh" />
+    <ClInclude Include="src\cuda_poisson_fourier.cuh" />
+    <ClInclude Include="src\DataToNormal.h" />
+    <ClInclude Include="src\DipProcessing.h" />
+    <ClInclude Include="src\eigen.h" />
+    <ClInclude Include="src\ExtractInsert.h" />
+    <ClInclude Include="src\Gaussian.h" />
+    <ClInclude Include="src\InverseLaplacian.h" />
+    <ClInclude Include="src\OpNabla.h" />
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <ProjectGuid>{BD9D8CEA-6B4C-4F06-AA0F-19CD8EFA6CE7}</ProjectGuid>
+    <RootNamespace>geotime_constraint</RootNamespace>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <CharacterSet>MultiByte</CharacterSet>
+    <PlatformToolset>v142</PlatformToolset>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+    <CharacterSet>MultiByte</CharacterSet>
+    <PlatformToolset>v142</PlatformToolset>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Label="ExtensionSettings">
+    <Import Project="$(VCTargetsPath)\BuildCustomizations\CUDA 11.0.props" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <PropertyGroup Label="UserMacros" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <LinkIncremental>true</LinkIncremental>
+  </PropertyGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <Optimization>Disabled</Optimization>
+      <PreprocessorDefinitions>WIN32;WIN64;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories);$(CudaToolkitIncludeDir);./src</AdditionalIncludeDirectories>
+    </ClCompile>
+    <Link>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <SubSystem>Console</SubSystem>
+      <AdditionalDependencies>cudart_static.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;cusparse.lib;cuda.lib;cudart.lib;cublas.lib;cusolver.lib;cufft.lib;libfftw3-3.lib;libfftw3f-3.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>%(AdditionalLibraryDirectories);$(CudaToolkitLibDir);./lib64</AdditionalLibraryDirectories>
+    </Link>
+    <CudaCompile>
+      <TargetMachinePlatform>64</TargetMachinePlatform>
+    </CudaCompile>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <Optimization>MaxSpeed</Optimization>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <PreprocessorDefinitions>WIN32;WIN64;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories);$(CudaToolkitIncludeDir);./src</AdditionalIncludeDirectories>
+    </ClCompile>
+    <Link>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+      <SubSystem>Console</SubSystem>
+      <AdditionalDependencies>cudart_static.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;cusparse.lib;cuda.lib;cudart.lib;cublas.lib;cusolver.lib;cufft.lib;libfftw3-3.lib;libfftw3f-3.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>%(AdditionalLibraryDirectories);$(CudaToolkitLibDir);./lib64</AdditionalLibraryDirectories>
+    </Link>
+    <CudaCompile>
+      <TargetMachinePlatform>64</TargetMachinePlatform>
+    </CudaCompile>
+  </ItemDefinitionGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets">
+    <Import Project="$(VCTargetsPath)\BuildCustomizations\CUDA 11.0.targets" />
+  </ImportGroup>
+</Project>

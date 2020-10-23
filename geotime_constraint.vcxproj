@@ -25,6 +25,7 @@
     <ClCompile Include="src\InverseLaplacian.cpp" />
     <ClCompile Include="src\main.cpp" />
     <ClCompile Include="src\OpNabla.cpp" />
+    <ClCompile Include="src\XData.cpp" />
   </ItemGroup>
   <ItemGroup>
     <CudaCompile Include="src\cuda_cg.cu" />
@@ -50,6 +51,7 @@
     <ClInclude Include="src\Gaussian.h" />
     <ClInclude Include="src\InverseLaplacian.h" />
     <ClInclude Include="src\OpNabla.h" />
+    <ClInclude Include="src\XData.h" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{BD9D8CEA-6B4C-4F06-AA0F-19CD8EFA6CE7}</ProjectGuid>

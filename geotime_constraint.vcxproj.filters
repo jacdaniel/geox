@@ -48,6 +48,9 @@
     <ClCompile Include="src\InverseLaplacian.cpp">
       <Filter>src</Filter>
     </ClCompile>
+    <ClCompile Include="src\XData.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <CudaCompile Include="src\cuda_nabla.cu">
@@ -113,6 +116,9 @@
       <Filter>src</Filter>
     </ClInclude>
     <ClInclude Include="src\InverseLaplacian.h">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="src\XData.h">
       <Filter>src</Filter>
     </ClInclude>
   </ItemGroup>

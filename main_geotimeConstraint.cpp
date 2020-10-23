@@ -262,13 +262,18 @@ public:
 	int *size, size0;
 	short* dipxy;
 	double epsilon;
+	std::vector<XData> Xdipxy;
 	void setSize(int *size);
 	void CallBack(void* in, void* out);
 	void Preconditionner(void* in, void* out);
+	void CallBack(std::vector<XData> Xin, std::vector<XData> Xout);
+	void Preconditionner(std::vector<XData> Xin, std::vector<XData> Xout);
 	void setDipxy(short* dipxy);
+	void setDipxy(std::vector<XData> Xdipxy);
 	void setEpsilon(double epsilon);
 private:
 	PARAM* param;
+	std::vector<PARAM*> Xparam;
 };
 
 myCallBack2::myCallBack2()
@@ -284,6 +289,11 @@ void myCallBack2::setSize(int *size)
 void myCallBack2::setDipxy(short* dipxy)
 {
 	this->dipxy = dipxy;
+}
+
+void myCallBack2::setDipxy(std::vector<XData> data)
+{
+	this->Xdipxy = data;
 }
 
 void myCallBack2::setEpsilon(double epsilon)
@@ -311,6 +321,54 @@ void myCallBack2::Preconditionner(void* in, void* out)
 	param->lap->run();
 	// memcpy(out, in, (size_t)size[0] * size[1] * size[2] * sizeof(double));
 }
+
+void myCallBack2::CallBack(std::vector<XData> Xin, std::vector<XData> Xout)
+{
+	int N = Xin.size();
+	for (int n = 0; n < N; n++)
+	{
+		double* in = (double*)Xin[n].getData();
+		int* size = Xin[n].getSize();
+		double* out = (double*)Xout[n].getData();
+		short* dxy = (short*)Xdipxy[n].getData();
+		opDirect((double*)in, dxy, size, epsilon, (double*)out);
+	}
+}
+
+
+void myCallBack2::Preconditionner(std::vector<XData> Xin, std::vector<XData> Xout)
+{
+	int N = Xin.size();
+	if (Xparam.size() == 0)
+	{
+		Xparam.resize(N);
+		for (int n = 0; n < N; n++)
+		{
+			void* in = Xin[n].getData();
+			int* size = Xin[n].getSize();
+			void* out = Xout[n].getData();
+			PARAM *param0 = new myCallBack2::PARAM();
+			param0->lap = new InverseLaplacian();
+			param0->lap->setdataIn(in);
+			param0->lap->setDataOut(out);
+			param0->lap->setSize(size[0], size[1], size[2]);
+			Xparam[n] = param0;
+		}
+	}
+
+
+	for (int n = 0; n < N; n++)
+	{
+		// double* in = (double*)Xin[n].getData();
+		// int* size = Xin[n].getSize();
+		// double* out = (double*)Xout[n].getData();
+		// long size0 = (long)size[0] * size[1] * size[2];
+		// memcpy(out, in, size0 * sizeof(double));
+		PARAM* param0 = Xparam[n];
+		param0->lap->run();
+	}
+}
+
 
 
 #define YSWAP(x) ((x & 0xff) << 8) | ((x & 0xff00) >> 8)
@@ -361,17 +419,39 @@ int main_geotimeConstraint(int argc, char** argv)
 	debug_data_save(rhs, size, "d:\\text.raw");
 	debug_data_save(tau, size, "d:\\text.raw");
 
+
+	std::vector<XData> Xdipxy;
+	Xdipxy.resize(1);
+	XData mdipxy;
+	mdipxy.setData(dipxy, size, XData::TYPE::SHORT);
+	Xdipxy[0] = mdipxy;
+
+	std::vector<XData> Xrhs;
+	Xrhs.resize(1);
+	XData mrhs;
+	mrhs.setData(rhs, size, XData::TYPE::DOUBLE);
+	Xrhs[0] = mrhs;
+
+	std::vector<XData> Xtau;
+	Xtau.resize(1);
+	XData mtau;
+	mtau.setData(tau, size, XData::TYPE::DOUBLE);
+	Xtau[0] = mtau;
+
 	myCallBack2* c = new myCallBack2();
 	c->setSize(size);
 	c->setDipxy(dipxy);
+	c->setDipxy(Xdipxy);
 	c->setEpsilon(0.005);
 
 	ConjugateGradient* p = new ConjugateGradient();
 	p->setCallback(c, nullptr);
 	p->setSize(size0);
 	p->setRhs(rhs);
+	p->setRhs(Xrhs);
 	p->setX(tau);
-	p->setNbiter(20);
+	p->setX(Xtau);
+	p->setNbiter(50);
 	p->run();
 
 	delete p;

@@ -55,7 +55,7 @@ void InverseLaplacian::paramInit()
 			double wz = 2.0 * PI * (double)y / (double)(2.0 * dimy);
 			double l1 = -4.0 + 2.0 * cos(wx) + 2.0 * cos(wz);
 			// freq[add] = l1;
-			if (l1 == 0.0) ((double*)param->mask)[add] = 1.0; else ((double*)param->mask)[add] = l1;
+			if (l1 == 0.0) ((double*)param->mask)[add] = 0.0; else ((double*)param->mask)[add] = 1.0/l1;
 		}
 	}
 	param->fftw_norm = (double)(param->size0) * 4.0;
@@ -70,7 +70,7 @@ void InverseLaplacian::run()
 	fftw_execute(param->planDirect);
 	for (long add = 0; add < param->size0; add++)
 	{
-		((double*)param->freq)[add] /= ((double*)param->mask)[add];
+		((double*)param->freq)[add] *= ((double*)param->mask)[add];
 	}
 	fftw_execute(param->planInverse);
 	for (long add = 0; add < param->size0; add++)

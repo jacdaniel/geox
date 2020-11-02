@@ -120,7 +120,7 @@ template <typename T> int OpNabla::nablatZ(T* f, int* size, T* g)
 	return 0;
 }
 
-template <typename T> static int OpNabla::nablaX(short* f, double norm, int* size, T* g)
+template <typename T> int OpNabla::nablaX(short* f, double norm, int* size, T* g)
 {
 	if (f == NULL || size == NULL || g == NULL) return 1;
 	for (long z = 0; z < size[2]; z++)
@@ -142,7 +142,7 @@ template <typename T> static int OpNabla::nablaX(short* f, double norm, int* siz
 
 
 
-template <typename T> static int OpNabla::nablaY(short* f, double norm, int* size, T* g)
+template <typename T> int OpNabla::nablaY(short* f, double norm, int* size, T* g)
 {
 	if (f == NULL || size == NULL || g == NULL) return 1;
 	for (long z = 0; z < size[2]; z++)
@@ -160,7 +160,7 @@ template <typename T> static int OpNabla::nablaY(short* f, double norm, int* siz
 	return 0;
 }
 
-template <typename T> static int OpNabla::nablaZ(short* f, double norm, int* size, T* g)
+template <typename T> int OpNabla::nablaZ(short* f, double norm, int* size, T* g)
 {
 	if (f == NULL || size == NULL || g == NULL) return 1;
 	for (long x = 0; x < size[0]; x++)
@@ -178,7 +178,7 @@ template <typename T> static int OpNabla::nablaZ(short* f, double norm, int* siz
 	return 0;
 }
 
-template <typename T> static int OpNabla::nablatX(short* f, double norm, int* size, T* g)
+template <typename T> int OpNabla::nablatX(short* f, double norm, int* size, T* g)
 {
 	long x = 0;
 	if (f == NULL || size == NULL || g == NULL) return 1;
@@ -199,7 +199,7 @@ template <typename T> static int OpNabla::nablatX(short* f, double norm, int* si
 	return 0;
 }
 
-template <typename T> static int OpNabla::nablatY(short* f, double norm, int* size, T* g)
+template <typename T> int OpNabla::nablatY(short* f, double norm, int* size, T* g)
 {
 	long y = 0;
 	if (f == NULL || size == NULL || g == NULL) return 1;
@@ -220,7 +220,7 @@ template <typename T> static int OpNabla::nablatY(short* f, double norm, int* si
 	return 0;
 }
 
-template <typename T> static int OpNabla::nablatZ(short* f, double norm, int* size, T* g)
+template <typename T> int OpNabla::nablatZ(short* f, double norm, int* size, T* g)
 {
 	long z = 0;
 	if (f == NULL || size == NULL || g == NULL) return 1;

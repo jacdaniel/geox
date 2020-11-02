@@ -91,9 +91,9 @@ void BlocProc::run()
 				int x0 = x * this->bloc_size[0];
 				block_dim_cut_param2(this->size[0], x0, this->bloc_size[0], this->border_size[0], &px);
 
-				fprintf(stderr, "xread1 %d %d %d\n", px.xread1, py.xread1, pz.xread1);
-				fprintf(stderr, "xread2 %d %d %d\n", px.xread2, py.xread2, pz.xread2);
-				fprintf(stderr, "dx     %d %d %d\n", px.dx, py.dx, pz.dx);
+				// fprintf(stderr, "xread1 %d %d %d\n", px.xread1, py.xread1, pz.xread1);
+				// fprintf(stderr, "xread2 %d %d %d\n", px.xread2, py.xread2, pz.xread2);
+				// fprintf(stderr, "dx     %d %d %d\n", px.dx, py.dx, pz.dx);
 
 
 				x1[0] = std::min(x * this->bloc_size[0], size[0] - 1);

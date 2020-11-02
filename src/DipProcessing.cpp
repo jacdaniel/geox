@@ -208,9 +208,9 @@ void mycallback2::f(int xread1, int xread2, int yread1, int yread2, int zread1, 
 	int sizex[] = { dx, dy, dz };
 
 	blocExtract(data0, size0, xread1, xread2, yread1, yread2, zread1, zread2, data_e, dx, dy, dz);
-	debug_data_short_save(data_e, sizex, "d:\\data_e.raw");
+	// debug_data_short_save(data_e, sizex, "d:\\data_e.raw");
 	data_mirror_short_float(data_e, sizex, offset, data_c, sizeC);
-	debug_data_float_save(data_c, sizeC, "d:\\data_c.raw");
+	// debug_data_float_save(data_c, sizeC, "d:\\data_c.raw");
 
 	param->pDataToNormal->dataToDip(data_c, sizeC, param->res);
 
@@ -227,7 +227,7 @@ void mycallback2::f(int xread1, int xread2, int yread1, int yread2, int zread1, 
 		}
 
 	int i = 0;
-	debug_data_short_save(dipXY, size0, "d:\\dipXY.raw");
+	// debug_data_short_save(dipXY, size0, "d:\\dipXY.raw");
 
 
 

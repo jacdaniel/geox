@@ -20,7 +20,9 @@ template <typename T> T* Gaussian::smooth1d_(double sigma, int* size)
 		norm += (double)mask[i];
 	}
 	for (i = 0; i < width; i++)
-		mask[i] /= norm;
+	{
+		mask[i] = (T)((double)mask[i] / norm);
+	}
 	if (size)
 		*size = width;
 	return mask;
@@ -81,6 +83,6 @@ float* Gaussian::gradient1dFloat(double sigma, int* size)
 
 void* Gaussian::dataFree(void* data)
 {
-	delete data;
+	delete[] data;
 	return nullptr;
 }

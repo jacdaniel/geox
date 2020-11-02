@@ -163,7 +163,7 @@ int ConjugateGradient::run()
 
 	while (cont)
 	{
-		if (iter % 10) fprintf(stderr, "%d \ %d [%G - %G]\n", iter, nbIter, alphax, denom);
+		if (iter % 10 == 0) fprintf(stderr, "%d - %d [%G - %G]\n", iter, nbIter, alphax, denom);
 		if (iter == 0)
 		{
 			for (long i = 0; i < size0; i++)
@@ -256,7 +256,7 @@ int ConjugateGradient::run2()
 
 	while (cont)
 	{
-		if (iter % 10) fprintf(stderr, "%d \ %d [%G - %G]\n", iter, nbIter, alphax, denom);
+		if (iter % 10 == 0) fprintf(stderr, "%d - %d [%G - %G]\n", iter, nbIter, alphax, denom);
 		if (iter == 0)
 		{
 			for (int n = 0; n < N; n++)
@@ -283,7 +283,8 @@ int ConjugateGradient::run2()
 		callback->CallBack(param->Xd, param->Xtmp);
 		denom = dot(param->Xd, param->Xtmp);
 		alphax = rho0 / denom;
-		if (fabs(denom) > 1e-6 && fabs(alphax) < 1e6 && fabs(alphax) > 1e-6)
+		// if (fabs(denom) > 1e-12 && fabs(alphax) < 1e6 && fabs(alphax) > 1e-6)
+		if (fabs(alphax) < 1e6 && fabs(alphax) > 1e-6)
 		{
 
 			for (int n = 0; n < N; n++)

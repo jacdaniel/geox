@@ -1,6 +1,6 @@
 // #pragma once
 
-#ifndef __CONJUGATEGRADIEN__
+#ifndef __CONJUGATEGRADIENT__
 #define __CONJUGATEGRADIENT__
 
 #include<vector>

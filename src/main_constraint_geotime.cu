@@ -283,7 +283,6 @@ void main_constraint_geotime_run(int argc, char** argv)
 	debug_ddata_save(param->d_divx, param->size, "d:\\res.raw");
 
 
-
 	CALLBACK_DATA3* param0 = (CALLBACK_DATA3*)calloc(1, sizeof(CALLBACK_DATA3));
 	param0->size = size;
 	param0->poisson = param->poisson;

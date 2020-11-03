@@ -75,23 +75,38 @@ void InverseLaplacian2::run()
 		paramInit();
 	}
 
-	long z = 0;
-	for (long y = 0; y < size[1]; y++)
+	for (long z=0; z<size[2]; z++ )
 	{
-		ExtractInsert::extractX((double*)dataIn, size, y, z, (double*)param->in);
-		fftw_execute(param->planDirect[0]);
-		ExtractInsert::insertX((double*)dataOut, size, y, z, (double*)param->out);
+		for (long y = 0; y < size[1]; y++)
+		{
+			ExtractInsert::extractX((double*)dataIn, size, y, z, (double*)param->in);
+			fftw_execute(param->planDirect[0]);
+			ExtractInsert::insertX((double*)dataOut, size, y, z, (double*)param->out);
+		}
 	}
 
-	for (long x = 0; x < size[0]; x++)
+	for (long z=0; z<size[2]; z++)
 	{
-		ExtractInsert::extractY((double*)dataOut, size, x, z, (double*)param->in);
-		fftw_execute(param->planDirect[1]);
-		ExtractInsert::insertY((double*)dataOut, size, x, z, (double*)param->out);
+		for (long x = 0; x < size[0]; x++)
+		{
+			ExtractInsert::extractY((double*)dataOut, size, x, z, (double*)param->in);
+			fftw_execute(param->planDirect[1]);
+			ExtractInsert::insertY((double*)dataOut, size, x, z, (double*)param->out);
+		}
 	}
 
-	double c0 = -4.0;
-	if (param->dim == _3D) c0 = -6.0;
+	if (param->dim == DIMS::_3D)
+	{
+		for (long y = 0; y < size[1]; y++)
+		{
+			for (long x = 0; x < size[0]; x++)
+			{
+				ExtractInsert::extractZ((double*)dataOut, size, x, y, (double*)param->in);
+				fftw_execute(param->planDirect[2]);
+				ExtractInsert::insertZ((double*)dataOut, size, x, y, (double*)param->out);
+			}
+		}	
+	}
 
 	for (long z=0; z<size[2]; z++)
 	{
@@ -99,7 +114,7 @@ void InverseLaplacian2::run()
 		{
 			for (long x = 0; x < size[0]; x++)
 			{
-				long add = size[0] * y + x;
+				long add = size[0] * size[1] * z + size[0] * y + x;
 				double l1 = -6.0 + ((double**)this->param->arrayCos)[0][x] + ((double**)this->param->arrayCos)[1][y] + ((double**)this->param->arrayCos)[2][z];
 				if (l1 == 0.0)
 				{
@@ -113,19 +128,39 @@ void InverseLaplacian2::run()
 		}
 	}
 
-	for (long y = 0; y < size[1]; y++)
+	for (long z = 0; z < size[2]; z++)
 	{
-		ExtractInsert::extractX((double*)dataOut, size, y, z, (double*)param->in);
-		fftw_execute(param->planInverse[0]);
-		ExtractInsert::insertX((double*)dataOut, size, y, z, (double*)param->out);
+		for (long y = 0; y < size[1]; y++)
+		{
+			ExtractInsert::extractX((double*)dataOut, size, y, z, (double*)param->in);
+			fftw_execute(param->planInverse[0]);
+			ExtractInsert::insertX((double*)dataOut, size, y, z, (double*)param->out);
+		}
 	}
 
-	for (long x = 0; x < size[0]; x++)
+	for (long z=0; z<size[2]; z++)
 	{
-		ExtractInsert::extractY((double*)dataOut, size, x, z, (double*)param->in);
-		fftw_execute(param->planInverse[1]);
-		ExtractInsert::insertY((double*)dataOut, size, x, z, (double*)param->out);
+		for (long x = 0; x < size[0]; x++)
+		{
+			ExtractInsert::extractY((double*)dataOut, size, x, z, (double*)param->in);
+			fftw_execute(param->planInverse[1]);
+			ExtractInsert::insertY((double*)dataOut, size, x, z, (double*)param->out);
+		}
 	}
+
+	if (param->dim == DIMS::_3D)
+	{
+		for (long y = 0; y < size[1]; y++)
+		{
+			for (long x = 0; x < size[0]; x++)
+			{
+				ExtractInsert::extractZ((double*)dataOut, size, x, y, (double*)param->in);
+				fftw_execute(param->planInverse[2]);
+				ExtractInsert::insertZ((double*)dataOut, size, x, y, (double*)param->out);
+			}
+		}
+	}
+
 
 	for (long add = 0; add < param->size0; add++)
 	{

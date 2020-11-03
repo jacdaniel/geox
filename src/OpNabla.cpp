@@ -44,7 +44,7 @@ template <typename T> int OpNabla::nablaZ(T* f, int* size, T* g)
 	if (f == NULL || size == NULL || g == NULL) return 1;
 	for (long x = 0; x < size[0]; x++)
 	{
-		for (long y = 0; y < size[1]; x++)
+		for (long y = 0; y < size[1]; y++)
 		{
 			for (long z = 0; z < size[2] - 1; z++)
 			{
@@ -108,7 +108,7 @@ template <typename T> int OpNabla::nablatZ(T* f, int* size, T* g)
 		for (long y = 0; y < size[1]; y++)
 		{
 			z = 0;
-			g[(long)size[0] * size[1] * z + size[0] * y + x] = -f[(long)size[0] * size[1] * (z + 1) + size[0] * y + x];
+			g[(long)size[0] * size[1] * z + size[0] * y + x] = -f[(long)size[0] * size[1] * z + size[0] * y + x];
 			for (z = 1; z < size[2] - 1; z++)
 			{
 				g[(long)size[0] * size[1] * z + size[0] * y + x] = f[(long)size[0] * size[1] * (z - 1) + size[0] * y + x] - f[(long)size[0] * size[1] * z + size[0] * y + x];
@@ -165,7 +165,7 @@ template <typename T> int OpNabla::nablaZ(short* f, double norm, int* size, T* g
 	if (f == NULL || size == NULL || g == NULL) return 1;
 	for (long x = 0; x < size[0]; x++)
 	{
-		for (long y = 0; y < size[1]; x++)
+		for (long y = 0; y < size[1]; y++)
 		{
 			for (long z = 0; z < size[2] - 1; z++)
 			{
@@ -229,7 +229,7 @@ template <typename T> int OpNabla::nablatZ(short* f, double norm, int* size, T* 
 		for (long y = 0; y < size[1]; y++)
 		{
 			z = 0;
-			g[(long)size[0] * size[1] * z + size[0] * y + x] = -(T)((double)(f[(long)size[0] * size[1] * (z + 1) + size[0] * y + x])/norm);
+			g[(long)size[0] * size[1] * z + size[0] * y + x] = -(T)((double)(f[(long)size[0] * size[1] * z + size[0] * y + x])/norm);
 			for (z = 1; z < size[2] - 1; z++)
 			{
 				g[(long)size[0] * size[1] * z + size[0] * y + x] = (T)((double)(f[(long)size[0] * size[1] * (z - 1) + size[0] * y + x] - f[(long)size[0] * size[1] * z + size[0] * y + x])/norm);

@@ -4,12 +4,28 @@
 #include <string.h>
 
 #include <malloc.h>
+
+#include <iostream>
+#include <chrono>
+#include <chronos.h>
 #include <OpNabla.h>
 #include <ConjugateGradient.h>
 #include <DipProcessing.h>
 #include <InverseLaplacian.h>
+#include <InverseLaplacian2.h>
 #include <fftw3.h>
+#include <xt_file.h>
 #include <stdlib.h>
+
+void* CHRONOS;
+#define CHRONOS_OPDIRECT 1
+#define CHRONOS_PRECOND  2
+
+
+typedef struct _CONSTRAINT
+{
+	int* no, * x0, * y0, * z0, nbre;
+}CONSTRAINT;
 
 void debug_data_save(double* data, int* size, char* filename)
 {
@@ -27,44 +43,6 @@ void debug_data_float_save(float* data, int* size, char* filename)
 	fclose(pFile);
 }
 
-#define PI 3.141592653589793
-void inverseLaplacian(void* in, int *size, void* out)
-{
-	double* freq = (double*)calloc(size[0] * size[1], sizeof(double));
-	fftw_plan p1, p2;
-
-	p1 = fftw_plan_r2r_2d(size[1], size[0], (double*)in, (double*)freq, FFTW_REDFT10, FFTW_REDFT10, FFTW_ESTIMATE);
-	p2 = fftw_plan_r2r_2d(size[1], size[0], (double*)freq, (double*)out, FFTW_REDFT01, FFTW_REDFT01, FFTW_ESTIMATE);
-
-	fftw_execute(p1);
-	debug_data_save((double*)in, size, "d:\\text.raw");
-	debug_data_save(freq, size, "d:\\text.raw");
-	for (long y = 0; y < size[1]; y++)
-	{
-		for (long x = 0; x < size[0]; x++)
-		{
-			long add = size[0] * y + x;
-			double wx = 2.0 * PI * (double)x / (double)(2.0*size[0]);
-			double wz = 2.0 * PI * (double)y / (double)(2.0*size[1]);
-			double l1 = -4.0 + 2.0 * cos(wx) + 2.0 * cos(wz);
-			// freq[add] = l1;
-			if (l1 == 0.0) freq[add] = freq[add]; else freq[add] /= l1;
-		}
-	}
-	debug_data_save(freq, size, "d:\\text.raw");
-	fftw_execute(p2);
-	debug_data_save((double*)out, size, "d:\\text.raw");
-	double norm = (double)(size[0] * size[1])*4.0;
-	for (long add = 0; add < size[0] * size[1]; add++)
-	{
-		((double*)out)[add] /= norm;
-	}
-
-	fftw_destroy_plan(p1);
-	fftw_destroy_plan(p2);
-	free(freq);
-}
-
 void debug_data_short_save(short* data, int* size, char* filename)
 {
 	long size0 = size[0] * size[1] * size[2];
@@ -79,6 +57,8 @@ void dipEstimation2D(short* data, int* size, double sigmaG, double sigmaT, short
 {
 	// int sizeB[] = { 16, 16, 1 };
 	int sizeB[] = { 256, 256, 1 };
+	// int sizeB[] = { 512, 512, 1 };
+
 	DipProcessing *p = new DipProcessing();
 	p->setDataIn(data);
 	p->setSize(size);
@@ -90,135 +70,60 @@ void dipEstimation2D(short* data, int* size, double sigmaG, double sigmaT, short
 	p->run();
 }
 
-void rhsInit(double* data, int* size, double* dipxy)
+void dipEstimationSynthetic3D(int* size, short* dipxy, short* dipxz)
 {
-	int size0 = size[0] * size[1] * size[2];
-	double* tmp = (double*)calloc(size0, sizeof(double));
+	long size0 = size[0] * size[1] * size[2];
 
-	OpNabla::nablatX(dipxy, size, data);
 	for (long add = 0; add < size0; add++)
-		data[add] *= -dipxy[add];
-	OpNabla::nablatY(dipxy, size, tmp); 
-	for (long add = 0; add < size0; add++)
-		data[add] -= tmp[add];
-	free(tmp);
+	{
+		dipxy[add] = 100;
+		dipxz[add] = 200;
+	}
+
+	for (long z = 0; z < size[2]; z++)
+	{
+		for (long y = 0; y < size[1]; y++)
+		{
+			for (long x = 0; x < size[0]; x++)
+			{
+				long add = size[0] * size[1] * z + size[0] * y + x;
+				dipxy[add] = 300.0 * (double)x / size[0] + 100;
+				dipxz[add] = 200.0 * (double)x / size[2] - 100;
+			}
+		}
+	}
 }
 
-
-/*
-void rhsInit(double* data, int* size, short* dipxy)
-{
-	int size0 = size[0] * size[1] * size[2];
-	double* tmp = (double*)calloc(size0, sizeof(double));
-
-	debug_data_short_save(dipxy, size, "d:\\text.raw");
-
-	OpNabla::nablatX(dipxy, 1000, size, data);
-	debug_data_save(data, size, "d:\\text.raw");
-
-
-
-	for (long add = 0; add < size0; add++)
-		data[add] *= -(double)dipxy[add]/1000.0;
-
-	debug_data_save(data, size, "d:\\text.raw");
-
-
-
-	OpNabla::nablatY(dipxy, 1000, size, tmp);
-
-	debug_data_save(tmp, size, "d:\\text.raw");
-
-
-	for (long add = 0; add < size0; add++)
-		data[add] -= tmp[add];
-
-	debug_data_save(data, size, "d:\\text.raw");
-	free(tmp);
-}
-*/
-
-
-void rhsInit(double* data, int* size, short* dipxy)
+void rhsInit(double* data, int* size, short* dipxy, short *dipxz)
 {
 	int size0 = size[0] * size[1] * size[2];
 	double* tmp = (double*)calloc(size0, sizeof(double));
 	double* in = (double*)calloc(size0, sizeof(double));
 
-	for (int i = 0; i < size0; i++) in[i] = -(double)dipxy[i]/1000.0 * (double)dipxy[i]/1000.0;
+	for (int i = 0; i < size0; i++) in[i] = (double)dipxy[i] / 1000.0 * (double)dipxy[i] / 1000.0;
 
 	OpNabla::nablatX(in, size, data);
-	debug_data_save(data, size, "d:\\text.raw");
-
 	OpNabla::nablatY(dipxy, 1000, size, tmp);
-
-	debug_data_save(tmp, size, "d:\\text.raw");
-
 	for (long add = 0; add < size0; add++)
-		data[add] -= tmp[add];
+		data[add] += tmp[add];
 
+	if ( size[2] > 1 && dipxz != nullptr )
+	{
+		for (int i = 0; i < size0; i++) in[i] = (double)dipxz[i] / 1000.0 * (double)dipxz[i] / 1000.0;
+		OpNabla::nablatX(in, size, tmp);
+		for (long add = 0; add < size0; add++) data[add] += tmp[add];
+		OpNabla::nablatZ(dipxz, 1000, size, tmp);
+		for (long add = 0; add < size0; add++)
+			data[add] += tmp[add];
+	}
+
+	for (long add = 0; add < size0; add++) data[add] = -data[add];
 	debug_data_save(data, size, "d:\\text.raw");
 	free(tmp);
 	free(in);
-
 }
 
-
-void opDirect(double* in, double* dipxy, int* size, double epsilon, double* data)
-{
-	long size0 = (long)size[0] * size[1] * size[2];
-	double* tmp = (double*)calloc(size0, sizeof(double));
-	double* tmp2 = (double*)calloc(size0, sizeof(double));
-
-	OpNabla::nablaX(in, size, data);
-	for (long add = 0; add < size0; add++) data[add] *= -dipxy[add];
-	OpNabla::nablaY(in, size, tmp2);
-	for (long add = 0; add < size0; add++) data[add] -= tmp2[add];
-
-	OpNabla::nablatX(data, size, tmp);
-	for (long add = 0; add < size0; add++) tmp[add] *= -dipxy[add];
-	OpNabla::nablatY(data, size, tmp2);
-	for (long add = 0; add < size0; add++) tmp[add] -= tmp2[add];
-
-	for (long add = 0; add < size0; add++) data[add] = tmp[add];
-
-	OpNabla::nablaX(in, size, tmp);
-	OpNabla::nablatX(tmp, size, tmp2);
-	for (long add = 0; add < size0; add++) data[add] += epsilon * tmp2[add];
-
-	free(tmp);
-	free(tmp2);
-}
-
-/*
-void opDirect(double* in, short* dipxy, int* size, double epsilon, double* data)
-{
-	long size0 = (long)size[0] * size[1] * size[2];
-	double* tmp = (double*)calloc(size0, sizeof(double));
-	double* tmp2 = (double*)calloc(size0, sizeof(double));
-
-	OpNabla::nablaX(in, size, data);
-	for (long add = 0; add < size0; add++) data[add] *= -(double)dipxy[add]/1000.0;
-	OpNabla::nablaY(in, size, tmp2);
-	for (long add = 0; add < size0; add++) data[add] -= tmp2[add];
-
-	OpNabla::nablatX(data, size, tmp);
-	for (long add = 0; add < size0; add++) tmp[add] *= -(double)dipxy[add]/1000.0;
-	OpNabla::nablatY(data, size, tmp2);
-	for (long add = 0; add < size0; add++) tmp[add] -= tmp2[add];
-
-	for (long add = 0; add < size0; add++) data[add] = tmp[add];
-
-	OpNabla::nablaX(in, size, tmp);
-	OpNabla::nablatX(tmp, size, tmp2);
-	for (long add = 0; add < size0; add++) data[add] += epsilon * tmp2[add];
-
-	free(tmp);
-	free(tmp2);
-}
-*/
-
-void opDirect(double* in, short* dipxy, int* size, double epsilon, double* data)
+void opDirect(double* in, short* dipxy, short *dipxz, int* size, double epsilon, double* data)
 {
 	long size0 = (long)size[0] * size[1] * size[2];
 	double* tmp = (double*)calloc(size0, sizeof(double));
@@ -226,19 +131,34 @@ void opDirect(double* in, short* dipxy, int* size, double epsilon, double* data)
 	double* data2 = (double*)calloc(size0, sizeof(double));
 
 	OpNabla::nablaX(in, size, data);
-	for (long add = 0; add < size0; add++) data[add] *= -(double)dipxy[add] / 1000.0;
+	for (long add = 0; add < size0; add++) data[add] *= (double)dipxy[add] / 1000.0;
 	OpNabla::nablaY(in, size, tmp2);
-	for (long add = 0; add < size0; add++) data[add] -= tmp2[add];
+	for (long add = 0; add < size0; add++) data[add] += tmp2[add];
 
-	for (int i = 0; i < size0; i++) data2[i] = -data[i] * (double)dipxy[i]/1000.0;
+	for (int i = 0; i < size0; i++) data2[i] = data[i] * (double)dipxy[i]/1000.0;
 
 	OpNabla::nablatX(data2, size, tmp);
-	// for (long add = 0; add < size0; add++) tmp[add] *= -(double)dipxy[add] / 1000.0;
 	OpNabla::nablatY(data, size, tmp2);
-	for (long add = 0; add < size0; add++) tmp[add] -= tmp2[add];
+	for (long add = 0; add < size0; add++) tmp[add] += tmp2[add];
 
 	for (long add = 0; add < size0; add++) data[add] = tmp[add];
 
+
+	if (size[2] > 1 && dipxz != nullptr )
+	{
+		OpNabla::nablaX(in, size, tmp);
+		for (long add = 0; add < size0; add++) tmp[add] *= (double)dipxz[add] / 1000.0;
+		OpNabla::nablaZ(in, size, tmp2);
+		for (long add = 0; add < size0; add++) tmp[add] += tmp2[add];
+
+		for (int i = 0; i < size0; i++) data2[i] = tmp[i] * (double)dipxz[i] / 1000.0;
+
+		OpNabla::nablatX(data2, size, tmp2);
+		OpNabla::nablatZ(tmp, size, data2);
+		for (long add = 0; add < size0; add++) tmp2[add] += data2[add];
+
+		for (long add = 0; add < size0; add++) data[add] += tmp2[add];
+	}
 	OpNabla::nablaX(in, size, tmp);
 	OpNabla::nablatX(tmp, size, tmp2);
 	for (long add = 0; add < size0; add++) data[add] += epsilon * tmp2[add];
@@ -248,7 +168,6 @@ void opDirect(double* in, short* dipxy, int* size, double epsilon, double* data)
 	free(data2);
 }
 
-
 class myCallBack2 : public ConjugateGradient::CALLBACK
 {
 private:
@@ -256,24 +175,30 @@ private:
 	{
 	public:
 		InverseLaplacian* lap;
+		InverseLaplacian2* lap2;
 	};
 public:
 	myCallBack2();
-	int *size, size0;
-	short* dipxy;
+	int* size, size0;
+	short* dipxy, *dipxz;
 	double epsilon;
-	std::vector<XData> Xdipxy;
-	void setSize(int *size);
+	std::vector<XData> Xdipxy, Xdipxz;
+	std::vector<CONSTRAINT> constraints;
+	void setSize(int* size);
 	void CallBack(void* in, void* out);
 	void Preconditionner(void* in, void* out);
 	void CallBack(std::vector<XData> Xin, std::vector<XData> Xout);
 	void Preconditionner(std::vector<XData> Xin, std::vector<XData> Xout);
 	void setDipxy(short* dipxy);
 	void setDipxy(std::vector<XData> Xdipxy);
+	void setDipxz(short* dipxy);
+	void setDipxz(std::vector<XData> Xdipxy);
 	void setEpsilon(double epsilon);
+	void setConstraints(std::vector<CONSTRAINT> constraints);
 private:
 	PARAM* param;
 	std::vector<PARAM*> Xparam;
+	void preconditionnerConstraintsApply(std::vector<XData> data, std::vector<CONSTRAINT> constraints);
 };
 
 myCallBack2::myCallBack2()
@@ -281,7 +206,7 @@ myCallBack2::myCallBack2()
 	param = nullptr;
 }
 
-void myCallBack2::setSize(int *size)
+void myCallBack2::setSize(int* size)
 {
 	this->size = size;
 }
@@ -296,15 +221,30 @@ void myCallBack2::setDipxy(std::vector<XData> data)
 	this->Xdipxy = data;
 }
 
+void myCallBack2::setDipxz(short* dipxz)
+{
+	this->dipxz = dipxz;
+}
+
+void myCallBack2::setDipxz(std::vector<XData> data)
+{
+	this->Xdipxz = data;
+}
+
 void myCallBack2::setEpsilon(double epsilon)
 {
 	this->epsilon = epsilon;
 }
 
+void myCallBack2::setConstraints(std::vector<CONSTRAINT> constraints)
+{
+	this->constraints = constraints;
+}
+
 
 void myCallBack2::CallBack(void* in, void* out)
 {
-	opDirect((double*)in, dipxy, size, epsilon, (double*)out);
+	opDirect((double*)in, dipxy, dipxz, size, epsilon, (double*)out);
 }
 
 void myCallBack2::Preconditionner(void* in, void* out)
@@ -317,13 +257,22 @@ void myCallBack2::Preconditionner(void* in, void* out)
 		param->lap->setdataIn(in);
 		param->lap->setDataOut(out);
 		param->lap->setSize(this->size[0], this->size[1], this->size[2]);
+
+		param->lap2 = new InverseLaplacian2();
+		param->lap2->setdataIn(in);
+		param->lap2->setDataOut(out);
+		param->lap2->setSize(size);
+
 	}
-	param->lap->run();
+	// param->lap->run();
+	param->lap2->run();
+
 	// memcpy(out, in, (size_t)size[0] * size[1] * size[2] * sizeof(double));
 }
 
 void myCallBack2::CallBack(std::vector<XData> Xin, std::vector<XData> Xout)
 {
+	CHRONOS_TIC(CHRONOS, CHRONOS_OPDIRECT);
 	int N = Xin.size();
 	for (int n = 0; n < N; n++)
 	{
@@ -331,13 +280,40 @@ void myCallBack2::CallBack(std::vector<XData> Xin, std::vector<XData> Xout)
 		int* size = Xin[n].getSize();
 		double* out = (double*)Xout[n].getData();
 		short* dxy = (short*)Xdipxy[n].getData();
-		opDirect((double*)in, dxy, size, epsilon, (double*)out);
+		short* dxz = (short*)Xdipxz[n].getData();
+		opDirect((double*)in, dxy, dxz, size, epsilon, (double*)out);
+	}
+	CHRONOS_TOC(CHRONOS, CHRONOS_OPDIRECT);
+}
+
+void myCallBack2::preconditionnerConstraintsApply(std::vector<XData> data, std::vector<CONSTRAINT> constraints)
+{
+	int N = constraints.size();
+	for (int n = 0; n < N; n++)
+	{
+		int* no = this->constraints[n].no;
+		int* x0 = this->constraints[n].x0;
+		int* y0 = this->constraints[n].y0;
+		int* z0 = this->constraints[n].z0;
+		int nbre = this->constraints[n].nbre;
+		double sum = 0.0;
+		for (int i = 0; i < nbre; i++)
+		{
+			double* in = (double*)data[no[i]].getData();
+			sum += in[this->size[0] * y0[i] + x0[i]];
+		}
+		sum /= (double)nbre;
+		for (int i = 0; i < nbre; i++)
+		{
+			double* in = (double*)data[no[i]].getData();
+			in[this->size[0] * y0[i] + x0[i]] = sum;
+		}
 	}
 }
 
-
 void myCallBack2::Preconditionner(std::vector<XData> Xin, std::vector<XData> Xout)
 {
+	CHRONOS_TIC(CHRONOS, CHRONOS_PRECOND);
 	int N = Xin.size();
 	if (Xparam.size() == 0)
 	{
@@ -347,73 +323,85 @@ void myCallBack2::Preconditionner(std::vector<XData> Xin, std::vector<XData> Xou
 			void* in = Xin[n].getData();
 			int* size = Xin[n].getSize();
 			void* out = Xout[n].getData();
-			PARAM *param0 = new myCallBack2::PARAM();
+			PARAM* param0 = new myCallBack2::PARAM();
 			param0->lap = new InverseLaplacian();
 			param0->lap->setdataIn(in);
 			param0->lap->setDataOut(out);
 			param0->lap->setSize(size[0], size[1], size[2]);
+
+			param0->lap2 = new InverseLaplacian2();
+			param0->lap2->setdataIn(in);
+			param0->lap2->setDataOut(out);
+			param0->lap2->setSize(size);
+
 			Xparam[n] = param0;
 		}
 	}
 
-
+	preconditionnerConstraintsApply(Xin, this->constraints);
 	for (int n = 0; n < N; n++)
 	{
-		// double* in = (double*)Xin[n].getData();
-		// int* size = Xin[n].getSize();
-		// double* out = (double*)Xout[n].getData();
-		// long size0 = (long)size[0] * size[1] * size[2];
-		// memcpy(out, in, size0 * sizeof(double));
-		PARAM* param0 = Xparam[n];
-		param0->lap->run();
+		Xparam[n]->lap2->run();
+		// debug_data_save((double*)Xout[n].getData(), Xin[n].getSize(), "d:\\text.raw");
+		// int* size = Xin[n].getSize(); memcpy(Xout[n].getData(), Xin[n].getData(), size[0] * size[1] * size[2] * sizeof(double));
 	}
+	preconditionnerConstraintsApply(Xout, this->constraints);
+	CHRONOS_TOC(CHRONOS, CHRONOS_PRECOND);
 }
 
 
 
 #define YSWAP(x) ((x & 0xff) << 8) | ((x & 0xff00) >> 8)
 
+
 int main_geotimeConstraint(int argc, char** argv)
 {
-	int size[] = { 350, 2000, 1 };
-	long size0 = (long)size[0] * size[1] * size[2];
+	CHRONOS = CHRONOS_INIT;
 
-	short* dipxy = (short*)calloc(size0, sizeof(short));
-	for (int y = 0; y < size[1]; y++)
-		for (int x = 0; x < size[0]; x++)
-		{
-			dipxy[y * size[0] + x] = 200;// (short)(.5 + (double)y / size[1] * 1.5 * 1000.0);
-		}
-
-	short* seismic = new short[static_cast<unsigned __int64>(size[0]) * size[1]];
-	for (int i = 0; i < (long)size[0] * size[1]; i++) seismic[i] = i;
+	// int size[] = { 350, 2000, 1 };
+	int size[] = { 200, 201, 202 };
 
 	char* filename = "D:\\TOTAL\\PLI\\seismic.xt";
-	FILE* pf = nullptr;
-	pf = fopen(filename, "rb");
-	int ret = fseek(pf, (long)5120+200*350*2000*2, SEEK_SET);
-	ret = fread(seismic, sizeof(short), size[0]*size[1], pf);
-	fclose(pf);
-	for (int i = 0; i < size[0]*size[1]; i++)
-		seismic[i] = YSWAP(seismic[i]);
+	XT_FILE* pf = new XT_FILE();
+	pf->openForRead(filename);
+	size[0] = pf->get_dimx();
+	size[1] = pf->get_dimy();
+	size[2] = 1;
+
+	size[0] = 200; size[1] = 1001; size[2] = 202;
+
+	long size0 = (long)size[0] * size[1] * size[2];
+	short* seismic = new short[size0];
+	short* dipxy = (short*)calloc(size0, sizeof(short));
+	short* dipxz = (short*)calloc(size0, sizeof(short));;
+	// pf->inlineRead(200, seismic);
+	delete pf;
+	
+		
+	int Nc = 3;
+	CONSTRAINT constr;
+	constr.no = (int*)calloc(Nc, sizeof(int));
+	constr.x0 = (int*)calloc(Nc, sizeof(int));
+	constr.y0 = (int*)calloc(Nc, sizeof(int));
+	constr.z0 = (int*)calloc(Nc, sizeof(int));
+	constr.nbre = Nc;
+	constr.no[0] = 0; constr.x0[0] = 137; constr.y0[0] = 467;
+	constr.no[1] = 0; constr.x0[1] = 137; constr.y0[1] = 531;
+	constr.no[2] = 0; constr.x0[2] = 131; constr.y0[2] = 707;
+
+	std::vector<CONSTRAINT> constraints;
+	constraints.resize(1);
+	constraints[0] = constr;
 
 
-	dipEstimation2D(seismic, size, 1.0, 1.5, dipxy);
-	// return 0;
+	// dipEstimation2D(seismic, size, 1.0, 1.5, dipxy);
+	dipEstimationSynthetic3D(size, dipxy, dipxz);
+
 
 	double* tau = (double*)calloc(size0, sizeof(double));	
 	double* rhs = (double*)calloc(size0, sizeof(double));
-	rhsInit(rhs, size, dipxy);
-/*
-	inverseLaplacian(rhs, size, tau);
-	for (long y = 0; y < size[1]; y++)
-	{
-		for (long x = 0; x < size[0]; x++)
-		{
-			tau[size[0] * y + x] -= x;
-		}
-	}
-	*/
+	// rhsInit(rhs, size, dipxy, constraints);
+	rhsInit(rhs, size, dipxy, dipxz);
 
 
 	debug_data_save(rhs, size, "d:\\text.raw");
@@ -425,6 +413,12 @@ int main_geotimeConstraint(int argc, char** argv)
 	XData mdipxy;
 	mdipxy.setData(dipxy, size, XData::TYPE::SHORT);
 	Xdipxy[0] = mdipxy;
+
+	std::vector<XData> Xdipxz;
+	Xdipxz.resize(1);
+	XData mdipxz;
+	mdipxz.setData(dipxz, size, XData::TYPE::SHORT);
+	Xdipxz[0] = mdipxz;
 
 	std::vector<XData> Xrhs;
 	Xrhs.resize(1);
@@ -438,11 +432,14 @@ int main_geotimeConstraint(int argc, char** argv)
 	mtau.setData(tau, size, XData::TYPE::DOUBLE);
 	Xtau[0] = mtau;
 
+
 	myCallBack2* c = new myCallBack2();
 	c->setSize(size);
 	c->setDipxy(dipxy);
 	c->setDipxy(Xdipxy);
+	c->setDipxz(Xdipxz);
 	c->setEpsilon(0.005);
+	// c->setConstraints(constraints);
 
 	ConjugateGradient* p = new ConjugateGradient();
 	p->setCallback(c, nullptr);
@@ -452,15 +449,30 @@ int main_geotimeConstraint(int argc, char** argv)
 	p->setX(tau);
 	p->setX(Xtau);
 	p->setNbiter(50);
-	p->run();
+
+
+	auto start = std::chrono::steady_clock::now();
+	p->run2();
+	auto end = std::chrono::steady_clock::now();
+	std::chrono::duration<double> elapsed_seconds = end - start;
+	std::cout << "elapsed time: " << elapsed_seconds.count() << "s\n";
+
+	double t_direct = CHRONOS_GET(CHRONOS, CHRONOS_OPDIRECT);
+	double t_precond = CHRONOS_GET(CHRONOS, CHRONOS_PRECOND);
+
+	fprintf(stderr, "tdirect:  %f\ntprecond: %f\n", t_direct, t_precond);
+
 
 	delete p;
 
-	for (long y = 0; y < size[1]; y++)
+	for (long z=0; z<size[2]; z++)
 	{
-		for (long x = 0; x < size[0]; x++)
+		for (long y = 0; y < size[1]; y++)
 		{
-			tau[size[0] * y + x] += x;
+			for (long x = 0; x < size[0]; x++)
+			{
+				tau[size[0]*size[1]*z + size[0] * y + x] += x;
+			}
 		}
 	}
 	debug_data_save(tau, size, "d:\\text.raw");
@@ -468,3 +480,5 @@ int main_geotimeConstraint(int argc, char** argv)
 	fprintf(stderr, "%s ok\n", __FILE__);
 	return 0;
 }
+
+

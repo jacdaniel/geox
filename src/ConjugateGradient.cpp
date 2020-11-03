@@ -163,7 +163,8 @@ int ConjugateGradient::run()
 
 	while (cont)
 	{
-		if (iter % 10 == 0) fprintf(stderr, "%d - %d [%G - %G]\n", iter, nbIter, alphax, denom);
+		// if (iter % 10 == 0) fprintf(stderr, "%d - %d [%G - %G]\n", iter, nbIter, alphax, denom);
+		fprintf(stderr, "%d - %d [%G - %G]\n", iter, nbIter, alphax, denom);
 		if (iter == 0)
 		{
 			for (long i = 0; i < size0; i++)
@@ -210,11 +211,6 @@ int ConjugateGradient::run()
 
 	return 0;
 }
-
-
-
-
-
 
 
 int ConjugateGradient::run2()
